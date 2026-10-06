@@ -1,0 +1,47 @@
+{
+  "name": "veriq",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Veriq business verification and company intelligence MVP",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "bot:dev": "tsx src/bot-polling.ts",
+    "bot:webhook": "tsx src/bot-webhook.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.1.0",
+    "@fastify/helmet": "^12.0.0",
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@prisma/client": "^6.19.0",
+    "dotenv": "^16.6.1",
+    "fastify": "^5.6.2",
+    "grammy": "^1.38.2",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
+    "eslint": "^9.37.0",
+    "prisma": "^6.19.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CompanyStatus {
+  ACTIVE
+  LIQUIDATED
+  UNKNOWN
+}
+
+enum InsolvencyStatus {
+  CLEAR
+  FLAGGED
+  UNKNOWN
+}
+
+enum SanctionsStatus {
+  CLEAR
+  POTENTIAL_MATCH
+  UNKNOWN
+}
+
+enum Platform {
+  telegram
+  whatsapp
+  web
+  api
+}
+
+model User {
+  id         String      @id @default(uuid()) @db.Uuid
+  email      String?     @unique
+  name       String?
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  botUsers   BotUser[]
+  lookups    LookupHistory[]
+  auditLogs  AuditLog[]
+
+  @@map("users")
+}
+
+model BotUser {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  platform        Platform
+  platformUserId  String   @map("platform_user_id")
+  telegramUserId  String?  @unique @map("telegram_user_id")
+  username        String?
+  firstName       String?  @map("first_name")
+  lastName        String?  @map("last_name")
+  reportStyle     String   @default("concise") @map("report_style")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, platformUserId])
+  @@index([createdAt])
+  @@map("bot_users")
+}
+
+model Company {
+  id                     String           @id @default(uuid()) @db.Uuid
+  registrationNumber     String           @unique @map("registration_number")
+  name                   String
+  previousNames          String[]         @default([]) @map("previous_names")
+  legalForm              String?          @map("legal_form")
+  status                 CompanyStatus    @default(UNKNOWN)
+  registrationDate       DateTime?         @map("registration_date") @db.Date
+  liquidationDate        DateTime?         @map("liquidation_date") @db.Date
+  legalAddress           String?          @map("legal_address")
+  postalCode             String?           @map("postal_code")
+  city                   String?
+  country                String?
+  vatRegistered          Boolean?          @map("vat_registered")
+  vatNumber              String?           @map("vat_number")
+  industryCode           String?           @map("industry_code")
+  industryName           String?           @map("industry_name")
+  boardMembers           Json?             @map("board_members")
+  shareholders           Json?
+  beneficialOwners       Json?             @map("beneficial_owners")
+  annualReportAvailable  Boolean?          @map("annual_report_available")
+  lastAnnualReportDate   DateTime?          @map("last_annual_report_date") @db.Date
+  revenue                Float?
+  profit                 Float?
+  employeeCount          Int?              @map("employee_count")
+  insolvencyStatus       InsolvencyStatus  @default(UNKNOWN) @map("insolvency_status")
+  sanctionsStatus        SanctionsStatus   @default(UNKNOWN) @map("sanctions_status")
+  dataSource             String            @default("Mock Provider") @map("data_source")
+  sourceLastUpdated      DateTime?          @map("source_last_updated")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+  lookups                LookupHistory[]
+  reports                VerificationReport[]
+  providerRequests       ProviderRequest[]
+  auditLogs              AuditLog[]
+
+  @@index([name])
+  @@index([createdAt])
+  @@map("companies")
+}
+
+model LookupHistory {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String?   @map("user_id") @db.Uuid
+  companyId      String?   @map("company_id") @db.Uuid
+  platform       Platform
+  query          String
+  resultStatus   String    @map("result_status")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  company        Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  report         VerificationReport?
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([createdAt])
+  @@map("lookup_history")
+}
+
+model VerificationReport {
+  id              String        @id @default(uuid()) @db.Uuid
+  lookupHistoryId String        @unique @map("lookup_history_id") @db.Uuid
+  companyId       String        @map("company_id") @db.Uuid
+  result          Json
+  createdAt       DateTime      @default(now()) @map("created_at")
+  lookupHistory   LookupHistory @relation(fields: [lookupHistoryId], references: [id], onDelete: Cascade)
+  company         Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([createdAt])
+  @@map("verification_reports")
+}
+
+model ProviderRequest {
+  id             String    @id @default(uuid()) @db.Uuid
+  providerName   String    @map("provider_name")
+  sourceRecordId String?   @map("source_record_id")
+  queryHash      String    @map("query_hash")
+  rawResponseHash String?  @map("raw_response_hash")
+  status         String
+  durationMs     Int       @map("duration_ms")
+  errorCode      String?   @map("error_code")
+  companyId      String?   @map("company_id") @db.Uuid
+  retrievedAt    DateTime  @default(now()) @map("retrieved_at")
+  company        Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([providerName, retrievedAt])
+  @@index([retrievedAt])
+  @@map("provider_requests")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  eventType  String   @map("event_type")
+  userId     String?  @map("user_id") @db.Uuid
+  platform   Platform?
+  companyId  String?  @map("company_id") @db.Uuid
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  company    Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model CompanyCacheEntry {
+  cacheKey     String   @id @map("cache_key")
+  provider     String
+  query        String
+  result       Json
+  retrievedAt  DateTime @default(now()) @map("retrieved_at")
+  expiresAt    DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("company_cache")
+}
+
+model RateLimitBucket {
+  key        String   @id
+  count      Int      @default(0)
+  resetAt    DateTime @map("reset_at")
+
+  @@index([resetAt])
+  @@map("rate_limit_buckets")
+}
+
+model TelegramUpdate {
+  id          String   @id @default(uuid()) @db.Uuid
+  updateId    Int      @unique @map("update_id")
+  receivedAt  DateTime @default(now()) @map("received_at")
+  processedAt DateTime? @map("processed_at")
+
+  @@index([receivedAt])
+  @@map("telegram_updates")
+}
