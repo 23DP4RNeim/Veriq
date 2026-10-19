@@ -30,6 +30,7 @@ The Telegram adapter formats messages and handles user interaction only. The Wha
 - Multiple company-name matches with Telegram selection buttons.
 - PostgreSQL lookup history, saved verification reports, audit events, provider request telemetry, and expiring cache entries.
 - Configurable API and Telegram search limits, structured request logging, request IDs, HTTPS webhook secret validation, and duplicate Telegram update handling.
+- Read-only admin console at `/admin` for dashboard metrics, lookup activity, companies, trust reports, analytics, settings, API-key status, and users.
 - OpenAPI UI at `/docs`.
 
 ## Tech stack
@@ -52,6 +53,8 @@ npm run dev
 
 The API listens on `http://localhost:3000`. Health check: `GET http://localhost:3000/health`. OpenAPI: `http://localhost:3000/docs`.
 
+Open the admin console at `http://localhost:3000/admin`. In development, admin data endpoints are available only to loopback requests unless `ADMIN_TOKEN` is set; with a token configured, enter it in the console when prompted. Production requires `ADMIN_TOKEN`. When PostgreSQL is available, the dashboard reads persisted lookup, company, report, and user data. Without it, the dashboard automatically switches to the built-in fictional company fixtures; lookups and verification reports created in this mode are held in memory for the current server process only, and user records/prior lookup history remain unavailable. Conversation entries represent lookup activity (the MVP does not store chat transcripts); trust reports display the existing verification checks. API-key inventory is informational because keys are not stored by this application.
+
 `db:migrate` uses `prisma migrate dev` and creates a migration if needed. For production use the committed migration history with `npm run db:migrate:deploy`. Do not run development migrations against production.
 
 ## Environment variables
@@ -66,6 +69,7 @@ The API listens on `http://localhost:3000`. Health check: `GET http://localhost:
 | `TELEGRAM_BOT_TOKEN` | Token from Telegram BotFather | empty, bot disabled |
 | `TELEGRAM_WEBHOOK_SECRET` | Telegram webhook secret header value | empty |
 | `TELEGRAM_WEBHOOK_URL` | Public HTTPS webhook URL ending in `/api/v1/telegram/webhook` | empty |
+| `ADMIN_TOKEN` | Bearer token protecting admin dashboard data endpoints; required in production | empty (loopback-only admin access in development) |
 | `RATE_LIMIT_REQUESTS` | Searches allowed per identity per window | `20` |
 | `RATE_LIMIT_WINDOW_SECONDS` | Search rate window | `3600` |
 | `LOG_LEVEL` | Fastify structured log level | `info` |
@@ -150,13 +154,13 @@ Implement UR and Firmas.lv provider classes at `src/modules/providers/ur/ur-comp
 
 - **Phase 1:** mock provider, Telegram, PostgreSQL, verification engine, history, REST API.
 - **Phase 2:** real company-data providers, UR/Firmas.lv access, multi-source conflict handling.
-- **Phase 3:** official WhatsApp Business integration, web dashboard, authentication, API keys.
+- **Phase 3:** official WhatsApp Business integration, expanded dashboard, customer authentication, API keys.
 - **Phase 4:** usage limits, billing, team accounts, expanded audit and enterprise reporting.
 
 ## Known MVP limitations
 
 - Mock data only; it does not prove a company exists or that any warning is complete.
-- Authentication/API keys and per-user authorization are not implemented.
+- Customer API authentication, API-key management, and per-user authorization are not implemented; admin access control applies only to the dashboard endpoints.
 - WhatsApp is only an interface stub.
 - Telegram selection and report buttons use the bot's in-memory fixture provider; app restarts retain database history but provider state remains fixture-backed.
 - Metrics are structured logs and persisted provider request rows; there is no Prometheus/OpenTelemetry stack.

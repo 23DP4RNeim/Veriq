@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Veriq Admin</title>
+  <style>
+    :root{color-scheme:dark;--bg:#080d17;--panel:#111827;--panel2:#0e1624;--line:#202c40;--muted:#8593a9;--text:#e9f0fa;--cyan:#00d5e8;--green:#00c896;--red:#fa4965;--amber:#ffb020}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer;color:inherit}a{color:inherit;text-decoration:none}
+    .layout{min-height:100vh;display:grid;grid-template-columns:208px minmax(0,1fr);grid-template-rows:58px minmax(calc(100vh - 90px),auto) 32px;grid-template-areas:"side top" "side main" "side foot"}
+    .side{grid-area:side;background:#090e18;border-right:1px solid #1b2638;padding:15px 11px;display:flex;flex-direction:column}.brand{height:32px;display:flex;gap:10px;align-items:center;padding:0 7px;margin-bottom:25px}.brand-icon{width:22px;height:22px;border:1px solid var(--cyan);border-radius:7px;color:var(--cyan);display:grid;place-items:center;font-weight:800}.brand b{font:700 12px ui-monospace,monospace;letter-spacing:1px}.online{font:8px ui-monospace,monospace;color:var(--green);letter-spacing:.5px}.nav{display:grid;gap:3px}.nav button{border:0;background:none;text-align:left;padding:9px 10px;color:#9aa9bd;border-radius:5px;font-size:12px;display:flex;gap:10px;align-items:center}.nav button:hover{background:#141e2d;color:white}.nav button.active{background:#1b283b;color:white;border-left:2px solid var(--cyan);padding-left:8px}.nav-icon{width:15px;color:#91a5bd;font-size:14px;text-align:center}.nav button.active .nav-icon{color:var(--cyan)}
+    .top{grid-area:top;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid #1a2638;background:#080d17;position:sticky;top:0;z-index:3}.session{font:9px ui-monospace,monospace;color:#a2b1c5;letter-spacing:.4px}.live-dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:8px}.top-actions{display:flex;align-items:center;gap:12px}.trace{height:32px;width:min(260px,36vw);background:#101827;border:1px solid #202c40;border-radius:5px;padding:0 10px;color:var(--text);outline:none;font-size:11px}.trace:focus{border-color:var(--cyan)}.icon-btn{border:1px solid #243047;background:#101827;width:32px;height:32px;border-radius:50%;color:#dbe7f5}.avatar{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:#1b3e4b;color:var(--cyan);font:bold 11px ui-monospace,monospace}
+    main{grid-area:main;padding:22px;min-width:0;max-width:1600px;width:100%;margin:0 auto}.foot{grid-area:foot;border-top:1px solid #1a2638;display:flex;justify-content:space-between;align-items:center;padding:0 22px;color:#708098;font:8px ui-monospace,monospace;letter-spacing:.4px}.foot .ok{color:var(--green)}
+    .page-head{display:flex;align-items:end;justify-content:space-between;margin:0 0 17px;gap:12px}.page-head h1{font-size:19px;margin:0 0 2px;letter-spacing:-.3px}.page-head p{margin:0;color:var(--muted);font-size:11px}.eyebrow{font:700 8px ui-monospace,monospace;color:var(--cyan);letter-spacing:1px}.button{border:1px solid #26364d;background:#142033;padding:7px 11px;border-radius:4px;color:#dce9f8;font-size:10px}.button:hover{border-color:var(--cyan);color:white}.button.primary{background:#063843;border-color:#08788b;color:#7ef2fa}.filter{height:32px;background:#0f1725;border:1px solid #25334a;border-radius:4px;color:var(--text);padding:0 9px;outline:none;font-size:11px}.filter:focus{border-color:var(--cyan)}.filters{display:flex;gap:8px;flex-wrap:wrap}
+    .metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:12px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px}.metric{padding:12px 13px;min-height:82px;position:relative;overflow:hidden}.metric-label{font-size:10px;color:#a8b4c5}.metric-value{font:700 21px ui-monospace,monospace;letter-spacing:.3px;margin-top:5px}.metric-foot{font:9px ui-monospace,monospace;color:var(--green)}.metric-foot.warn{color:var(--amber)}.metric-foot.muted{color:var(--muted)}.metric-line{position:absolute;right:10px;bottom:13px;width:46px;height:17px}
+    .grid-main{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(220px,1fr);gap:10px;margin-bottom:12px}.panel{padding:12px;min-width:0}.panel-heading{display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:10px}.panel-title{font-size:11px;font-weight:650}.panel-subtitle{font:8px ui-monospace,monospace;color:var(--cyan);letter-spacing:.8px;margin-bottom:2px}.chart{height:155px;width:100%;display:block}.chart-label{fill:#8a98ab;font:8px ui-monospace,monospace}.chart-grid{stroke:#233047;stroke-width:1;stroke-dasharray:2 4}.chart-fill{fill:rgba(0,213,232,.14)}.chart-line{fill:none;stroke:var(--cyan);stroke-width:2}.chart-point{fill:var(--cyan);stroke:#09111d;stroke-width:2}
+    .ring-wrap{display:flex;align-items:center;justify-content:space-around;gap:10px;min-height:155px}.ring{width:112px;height:112px;position:relative;flex:none}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}.ring .track{fill:none;stroke:#25344b;stroke-width:9}.ring .value{fill:none;stroke:var(--green);stroke-width:9;stroke-linecap:round;stroke-dasharray:0 100}.ring-num{position:absolute;inset:0;display:grid;place-items:center;font:700 18px ui-monospace,monospace}.legend{display:grid;gap:12px;font-size:9px}.legend small{display:block;color:var(--muted);font-size:8px}.legend i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px}
+    .grid-bottom{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(220px,1fr);gap:10px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap}th{font:8px ui-monospace,monospace;color:#98a8bc;text-align:left;padding:7px 6px;border-bottom:1px solid #263247;text-transform:uppercase;letter-spacing:.4px}td{font-size:9px;padding:8px 6px;border-bottom:1px solid #202b3e;color:#dfe7f2}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:#141e2d}.mono{font-family:ui-monospace,monospace}.muted{color:var(--muted)}.pill{display:inline-block;border-radius:12px;padding:2px 7px;font:8px ui-monospace,monospace;background:#1a2a36;color:var(--green)}.pill.red{background:#341c2a;color:var(--red)}.pill.amber{background:#342a17;color:var(--amber)}.pill.blue{background:#112b3c;color:#38c8f1}.platform{font:8px ui-monospace,monospace;padding:2px 5px;border-radius:3px;background:#142333;color:#54c7f3}.row-link{color:#dfe7f2;background:none;border:0;padding:0;text-align:left}.row-link:hover{color:var(--cyan)}.progress{height:3px;width:100px;background:#233047;border-radius:4px;overflow:hidden}.progress span{display:block;height:100%;background:var(--green)}.entity{padding:9px 1px;border-bottom:1px solid #202b3e}.entity:last-child{border-bottom:0}.entity-top{display:flex;justify-content:space-between;gap:8px;font-size:9px}.entity-meta{display:flex;justify-content:space-between;color:var(--muted);font:8px ui-monospace,monospace;margin:3px 0 6px}.entity .progress{width:55%}
+    .table-panel{padding:0;overflow:hidden}.table-panel .panel-heading{padding:12px 12px 0}.table-panel .table-wrap{padding:0 7px 7px}.pagination{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}.pager{display:flex;gap:6px}.empty{text-align:center;padding:32px 12px;color:var(--muted);font-size:11px}.loading{color:var(--muted);padding:24px;text-align:center}.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.setting{padding:13px}.setting b{font-size:11px}.setting p{color:var(--muted);font-size:10px;margin:7px 0 0}.setting .state{float:right}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.detail{padding:9px;border-bottom:1px solid var(--line)}.detail small{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.detail span{overflow-wrap:anywhere;font-size:10px}
+    .overlay{position:fixed;inset:0;background:#020611d9;z-index:9;display:grid;place-items:center;padding:20px}.dialog{width:min(460px,100%);max-height:85vh;overflow:auto;background:#111a29;border:1px solid #29364b;border-radius:8px;padding:18px;box-shadow:0 20px 70px #0009}.dialog h2{font-size:15px;margin:0 0 4px}.dialog p{color:var(--muted);font-size:10px}.dialog-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}.dialog input{width:100%;margin-top:7px}.alert{padding:9px 11px;background:#321923;color:#ff9aa8;border-radius:4px;font-size:10px;margin:10px 0}.toast{position:fixed;bottom:45px;right:20px;padding:9px 12px;border:1px solid #275244;background:#0e251e;color:#8ef2cc;border-radius:5px;z-index:12}.hidden{display:none!important}
+    @media(max-width:1000px){.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-main,.grid-bottom{grid-template-columns:minmax(0,1.6fr) minmax(200px,1fr)}}
+    @media(max-width:720px){.layout{grid-template-columns:58px minmax(0,1fr)}.side{padding:12px 6px}.brand{justify-content:center;padding:0;margin-bottom:20px}.brand-text,.nav-label{display:none}.nav button{justify-content:center;padding:10px 0}.nav button.active{padding:10px 0;border-left:2px solid var(--cyan)}.nav-icon{font-size:16px}.top{padding:0 12px}.session{font-size:8px}.top-actions{gap:6px}main{padding:15px 12px}.foot{padding:0 12px;font-size:7px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-main,.grid-bottom{grid-template-columns:1fr}.chart{height:140px}.ring-wrap{min-height:130px}.page-head h1{font-size:17px}.settings-grid{grid-template-columns:1fr}}
+    @media(max-width:420px){.trace{width:135px}.metrics{gap:6px}.metric{padding:9px;min-height:74px}.metric-value{font-size:17px}.top .session{max-width:102px;overflow:hidden;white-space:nowrap}}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="side">
+      <div class="brand"><div class="brand-icon">V</div><div class="brand-text"><b>VERIQ ADMIN</b><div class="online">CONSOLE.ONLINE</div></div></div>
+      <nav class="nav" id="nav"></nav>
+    </aside>
+    <header class="top">
+      <div class="session"><span class="live-dot"></span>SESSION: <span id="session-name">ADMIN</span></div>
+      <div class="top-actions">
+        <input id="trace" class="trace" placeholder="⌕  Trace query, company ID…" aria-label="Trace query or company">
+        <button class="icon-btn" id="refresh" title="Refresh data" aria-label="Refresh data">↻</button>
+        <div class="avatar" title="Veriq Admin">VQ</div>
+      </div>
+    </header>
+    <main id="main"><div class="loading">Connecting to Veriq services…</div></main>
+    <footer class="foot"><span><span class="live-dot"></span><span id="gateway">VERIQ GATEWAY: CONNECTING</span></span><span>VERIQ ADMIN CONSOLE · MOCK DATA PROVIDER</span></footer>
+  </div>
+  <div id="overlay-root"></div><div id="toast" class="toast hidden"></div>
+  <script>
+    (() => {
+      const tabs = [
+        ['dashboard','▦','Dashboard'],['conversations','◉','Conversations'],['companies','♧','Companies'],
+        ['reports','▤','Trust Reports'],['analytics','⌁','Analytics'],['settings','⚙','Bot Settings'],
+        ['keys','⚿','API Keys'],['users','♙','Users']
+      ];
+      const state = {tab:'dashboard',page:1,q:'',status:'',token:sessionStorage.getItem('veriq_admin_token')||'',busy:false};
+      const $ = (selector,root=document) => root.querySelector(selector);
+      const esc = value => String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+      const fmt = value => value == null ? '—' : new Intl.NumberFormat().format(value);
+      const date = value => value ? new Date(value).toLocaleString([], {month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+      const statusClass = value => /VERIFIED|MATCH|ACTIVE|CLEAR|PASS/i.test(value||'') ? '' : /WARNING|UNKNOWN|NEUTRAL|POTENTIAL/i.test(value||'') ? 'amber' : 'red';
+      const statusPill = value => `<span class="pill ${statusClass(value)}">${esc(value||'UNKNOWN')}</span>`;
+      const headers = () => ({'accept':'application/json',...(state.token?{authorization:`Bearer ${state.token}`}:{})});
+      async function api(path,options={}) {
+        const response = await fetch(path,{...options,headers:{...headers(),...(options.headers||{})}});
+        if(response.status===401){showLogin('Admin token required. Enter the ADMIN_TOKEN configured on the server.');throw new Error('Admin authentication required.')}
+        if(response.status===403){showLogin('Admin access is restricted to this machine unless ADMIN_TOKEN is configured.');throw new Error('Admin access denied.')}
+        if(!response.ok){let message=`Request failed (${response.status})`;try{const data=await response.json();message=data.error?.message||message}catch{}throw new Error(message)}
+        return response.json();
+      }
+      function toast(message){const el=$('#toast');el.textContent=message;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2600)}
+      function showLogin(message){
+        $('#overlay-root').innerHTML=`<div class="overlay"><form class="dialog" id="login-form"><div class="eyebrow">ADMIN ACCESS</div><h2>Sign in to Veriq Admin</h2><p>${esc(message)}</p><label class="muted">Admin token<input id="token-input" class="filter" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN" required></label><div class="alert hidden" id="login-error"></div><div class="dialog-actions"><button class="button primary" type="submit">Unlock console</button></div></form></div>`;
+        $('#login-form').addEventListener('submit',async event=>{event.preventDefault();state.token=$('#token-input').value;sessionStorage.setItem('veriq_admin_token',state.token);try{await api('/api/admin/session');$('#overlay-root').innerHTML='';await load()}catch(error){$('#login-error').textContent=error.message;$('#login-error').classList.remove('hidden')}});
+      }
+      function nav(){ $('#nav').innerHTML=tabs.map(([id,icon,label])=>`<button data-tab="${id}" class="${state.tab===id?'active':''}"><span class="nav-icon">${icon}</span><span class="nav-label">${label}</span></button>`).join('');$('#nav').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{state.tab=button.dataset.tab;state.page=1;state.q='';state.status='';$('#trace').value='';render()})) }
+      function shell(title,sub,content,actions=''){return `<div class="page-head"><div><div class="eyebrow">VERIQ / ${esc(title.toUpperCase())}</div><h1>${esc(title)}</h1><p>${esc(sub)}</p></div>${actions}</div>${content}`}
+      function metric(label,value,foot,variant=''){
+        const points=[4,10,7,15,11,17].map((n,i)=>`${i*9},${20-n}`).join(' ');
+        return `<section class="card metric"><div class="eyebrow">SYS.STAT</div><div class="metric-label">${esc(label)}</div><div class="metric-value">${esc(value)}</div><div class="metric-foot ${variant}">${esc(foot)}</div><svg class="metric-line" viewBox="0 0 46 20" aria-hidden="true"><polyline points="${points}" fill="none" stroke="${variant==='warn'?'var(--amber)':'var(--cyan)'}" stroke-width="1.2"/></svg></section>`;
+      }
+      function chart(points,labels,height=140){
+        const width=640,pad=28,plotH=height-28,plotW=width-pad*2;
+        const values=points.map(p=>p.count),max=Math.max(1,...values);
+        const coords=points.map((p,i)=>[pad+(points.length<2?plotW/2:i*plotW/(points.length-1)),height-18-(p.count/max)*(plotH-10)]);
+        const path=coords.map((p,i)=>`${i?'L':'M'} ${p[0]} ${p[1]}`).join(' ');
+        const area=`${path} L ${coords.at(-1)?.[0]??pad} ${height-18} L ${coords[0]?.[0]??pad} ${height-18} Z`;
+        const grid=[.25,.5,.75].map(n=>`<line class="chart-grid" x1="${pad}" x2="${width-pad}" y1="${height-18-plotH*n}" y2="${height-18-plotH*n}"/>`).join('');
+        const ticks=points.map((point,i)=>i===0||i===points.length-1||i%Math.ceil(points.length/6)===0?`<text class="chart-label" x="${coords[i][0]}" y="${height-3}" text-anchor="middle">${esc(labels(point.day))}</text>`:'').join('');
+        return `<svg class="chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Lookup volume chart">${grid}<path class="chart-fill" d="${area}"/><path class="chart-line" d="${path}"/>${coords.map(([x,y])=>`<circle class="chart-point" cx="${x}" cy="${y}" r="3"/>`).join('')}${ticks}</svg>`;
+      }
+      function completeDays(rows,days){
+        const values=new Map((rows||[]).map(row=>[row.day,row.count]));
+        const today=new Date();today.setUTCHours(0,0,0,0);
+        return Array.from({length:days},(_,index)=>{
+          const day=new Date(today);day.setUTCDate(today.getUTCDate()-days+index+1);
+          const key=day.toISOString().slice(0,10);
+          return {day:key,count:values.get(key)||0};
+        });
+      }
+      function dashboard(data){
+        const m=data.metrics, daily=completeDays(data.dailyQueries,7);
+        const pass=m.verificationPassRate;
+        const recent=(data.recent||[]).map(item=>`<tr><td class="mono">${esc(item.company?.name||item.query)}</td><td><span class="platform">${esc(item.platform)}</span></td><td>${esc(item.company?.registrationNumber||'Lookup')}</td><td>${statusPill(item.resultStatus)}</td><td class="mono muted">${date(item.createdAt)}</td></tr>`).join('');
+        const top=(data.topCompanies||[]).map((item,index)=>`<div class="entity"><div class="entity-top"><b>${esc(item.company.name)}</b><span class="mono" style="color:var(--cyan)">${fmt(item.queries)} queries</span></div><div class="entity-meta"><span>${esc(item.company.registrationNumber)}</span><span>${esc(item.company.status)}</span></div><div class="progress"><span style="width:${Math.max(6,100-index*18)}%"></span></div></div>`).join('')||'<div class="empty">No company lookups yet</div>';
+        return shell('Dashboard','Operational overview of company lookups and verification activity.',`
+          <div class="metrics">${metric('Total Queries Today',fmt(m.queriesToday),'Lookup history')}${metric('Active Lookups · 24h',fmt(m.activeLookups),'Recent activity')}${metric('Companies Indexed',fmt(m.companiesIndexed),'Stored records')}${metric('Verification Pass Rate',pass==null?'—':`${pass}%`,'Verified / evaluated',pass!=null&&pass<50?'warn':'')}${metric('API Uptime',`${Math.floor(m.uptimeSeconds/3600)}h ${Math.floor(m.uptimeSeconds%3600/60)}m`,'Since process start')}</div>
+          <div class="grid-main"><section class="panel"><div class="panel-heading"><div><div class="panel-subtitle">TELEMETRY.CHART.01</div><div class="panel-title">Query Volume Over Time · Last 7 Days</div></div><span class="muted mono" style="font-size:8px">● LOOKUPS / DAY</span></div>${chart(daily,d=>new Date(`${d}T00:00:00`).toLocaleDateString([],{day:'2-digit',month:'short'}))}</section>
+          <section class="panel"><div class="panel-heading"><div><div class="panel-subtitle">VERIFICATION.KPI</div><div class="panel-title">Verification Outcomes</div></div></div><div class="ring-wrap"><div class="ring"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="39" pathLength="100"/><circle class="value" cx="50" cy="50" r="39" pathLength="100" style="stroke-dasharray:${pass??0} 100"/></svg><div class="ring-num">${pass==null?'—':`${pass}%`}</div></div><div class="legend"><span><i style="background:var(--green)"></i>Pass rate<small>Successful evaluated checks</small></span><span><i style="background:var(--cyan)"></i>Saved reports<small>${fmt(m.reportsSaved)} reports stored</small></span></div></div></section></div>
+          <div class="grid-bottom"><section class="panel"><div class="panel-heading"><div><div class="panel-subtitle">SYS.FEED.LIVE</div><div class="panel-title">Recent Lookup Activity</div></div><button class="button" data-go="conversations">VIEW ALL</button></div><div class="table-wrap"><table><thead><tr><th>Query / Company</th><th>Platform</th><th>Registration</th><th>Outcome</th><th>Timestamp</th></tr></thead><tbody>${recent||'<tr><td colspan="5" class="empty">No lookups recorded</td></tr>'}</tbody></table></div></section>
+          <section class="panel"><div class="panel-heading"><div><div class="panel-subtitle">TOP.ENTITIES.QUERIED</div><div class="panel-title">Top Queried Companies</div></div><button class="button" data-go="companies">ALL</button></div>${top}</section></div>`);
+      }
+      const platformUser=item=>item.user?.botUsers?.map(b=>b.username||[b.firstName,b.lastName].filter(Boolean).join(' ')).find(Boolean)||`User ${item.userId?.slice(0,8)||'—'}`;
+      function pagination(data){return `<div class="pagination"><span>${data.total?`Showing ${(data.page-1)*data.limit+1}–${Math.min(data.page*data.limit,data.total)} of ${fmt(data.total)}`:'No results'}</span><div class="pager"><button class="button" data-page="${Math.max(1,data.page-1)}" ${data.page<=1?'disabled':''}>← Prev</button><button class="button" data-page="${data.page+1}" ${data.page>=data.pages?'disabled':''}>Next →</button></div></div>`}
+      function listPage(title,sub,data,columns,filters=''){
+        const rows=data.items.map(columns.row).join('')||`<tr><td colspan="${columns.count}" class="empty">No ${title.toLowerCase()} found</td></tr>`;
+        return shell(title,sub,`<section class="panel table-panel"><div class="panel-heading"><div class="filters"><input id="list-search" class="filter" placeholder="Search ${title.toLowerCase()}…" value="${esc(state.q)}">${filters}<button id="apply-filter" class="button">SEARCH</button></div></div><div class="table-wrap"><table><thead><tr>${columns.head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>${pagination(data)}</section>`);
+      }
+      function conversations(data){
+        return listPage('Conversations','Lookup activity from Telegram, API and other connected channels.',data,{
+          count:6,head:['User / Actor','Platform','Query','Company','Outcome','Timestamp'],
+          row:item=>`<tr><td>${esc(platformUser(item))}</td><td><span class="platform">${esc(item.platform)}</span></td><td class="mono">${esc(item.query)}</td><td>${item.company?`<button class="row-link" data-company="${esc(item.company.id)}">${esc(item.company.name)}</button>`:'—'}</td><td>${statusPill(item.resultStatus)}</td><td class="mono muted">${date(item.createdAt)}</td></tr>`
+        });
+      }
+      function companies(data){
+        const filters=`<select id="status-filter" class="filter"><option value="">All statuses</option>${['ACTIVE','LIQUIDATED','UNKNOWN'].map(s=>`<option ${state.status===s?'selected':''}>${s}</option>`).join('')}</select>`;
+        return listPage('Companies','Indexed company records and source status.',data,{
+          count:7,head:['Company','Registration','Status','Legal Form','Location','VAT','Updated'],
+          row:item=>`<tr><td><button class="row-link" data-company="${esc(item.id)}">${esc(item.name)}</button></td><td class="mono">${esc(item.registrationNumber)}</td><td>${statusPill(item.status)}</td><td>${esc(item.legalForm||'—')}</td><td>${esc([item.city,item.country].filter(Boolean).join(', ')||'—')}</td><td>${item.vatRegistered==null?'—':item.vatRegistered?'Yes':'No'}</td><td class="mono muted">${date(item.updatedAt)}</td></tr>`
+        },filters);
+      }
+      function reports(data){
+        const filters=`<select id="status-filter" class="filter"><option value="">All outcomes</option>${['VERIFIED','WARNING','NOT_VERIFIED','NOT_FOUND','DATA_UNAVAILABLE'].map(s=>`<option ${state.status===s?'selected':''}>${s}</option>`).join('')}</select>`;
+        return listPage('Trust Reports','Saved verification reports and their recorded outcomes.',data,{
+          count:5,head:['Company','Registration','Query','Outcome','Created'],
+          row:item=>`<tr><td>${esc(item.company.name)}</td><td class="mono">${esc(item.company.registrationNumber)}</td><td class="mono">${esc(item.lookupHistory.query)}</td><td>${statusPill(item.lookupHistory.resultStatus)}</td><td><button class="row-link mono" data-report="${esc(item.lookupHistory.id)}">${date(item.createdAt)}</button></td></tr>`
+        },filters);
+      }
+      function analytics(data){
+        const outcomes=data.outcomes||[], total=outcomes.reduce((a,x)=>a+x.count,0)||1;
+        const bars=[...outcomes].sort((a,b)=>b.count-a.count).map(item=>`<div class="entity"><div class="entity-top"><span>${statusPill(item.name)}</span><b>${fmt(item.count)}</b></div><div class="progress" style="width:100%;margin-top:8px"><span style="width:${Math.max(2,item.count/total*100)}%;background:${statusClass(item.name)==='red'?'var(--red)':statusClass(item.name)==='amber'?'var(--amber)':'var(--green)'}"></span></div></div>`).join('')||'<div class="empty">No events in the last 30 days</div>';
+        const platforms=(data.platforms||[]).map(item=>`<div class="entity"><div class="entity-top"><span class="platform">${esc(item.name)}</span><b>${fmt(item.count)}</b></div></div>`).join('')||'<div class="empty">No platform activity</div>';
+        return shell('Analytics','Lookup and verification trends from the last 30 days.',`<div class="metrics">${metric('Queries · 30 days',fmt(data.totals.queries),'Lookup records')}${metric('Companies Indexed',fmt(data.totals.companies),'Current index')}${metric('Reports Saved',fmt(data.totals.reports),'Last 30 days')}</div><div class="grid-main"><section class="panel"><div class="panel-heading"><div><div class="panel-subtitle">LOOKUP.TREND</div><div class="panel-title">Daily Query Volume · 30 Days</div></div></div>${chart(completeDays(data.dailyQueries,30),d=>new Date(`${d}T00:00:00`).toLocaleDateString([],{day:'2-digit',month:'short'}),190)}</section><section class="panel"><div class="panel-heading"><div class="panel-title">Outcome Distribution</div></div>${bars}</section></div><section class="panel" style="margin-top:10px"><div class="panel-heading"><div class="panel-title">Activity by Platform</div></div>${platforms}</section>`);
+      }
+      function settings(data){
+        const records=[['Company data provider',data.provider,'Mock provider configured in this MVP.'],['Telegram bot',data.telegram,'Telegram polling and webhook use the configured bot token.'],['WhatsApp channel',data.whatsapp,'WhatsApp adapter is a future integration stub.'],['Admin access',data.adminAuthentication,'Set ADMIN_TOKEN for token-protected access; otherwise limited to loopback.'],['Search rate limit',`${data.rateLimitRequests} requests / ${data.rateLimitWindowSeconds}s`,'Configured limit for company lookup requests.'],['Runtime',data.nodeEnvironment,`Node process uptime: ${Math.floor(data.uptimeSeconds/3600)}h ${Math.floor(data.uptimeSeconds%3600/60)}m.`]];
+        return shell('Bot Settings','Current service configuration. Secrets are never shown here.',`<div class="settings-grid">${records.map(([label,value,help])=>`<section class="panel setting"><b>${esc(label)}</b><span class="state">${statusPill(value)}</span><p>${esc(help)}</p></section>`).join('')}</div><div class="panel" style="margin-top:10px"><div class="panel-title">Configuration is read-only</div><p class="muted" style="font-size:10px">Edit server environment variables and restart Veriq to change provider or channel settings. This dashboard does not expose secret values.</p></div>`);
+      }
+      function apiKeys(data){
+        return shell('API Keys','Credential inventory for external service integrations.',`<section class="panel"><div class="panel-heading"><div><div class="panel-subtitle">CREDENTIALS</div><div class="panel-title">No API keys are stored in the application</div></div></div><p class="muted" style="font-size:10px">${esc(data.message)}</p><div class="empty">No key records to display</div></section>`);
+      }
+      function users(data){
+        return listPage('Users','Application users and linked messaging-channel identities.',data,{
+          count:5,head:['User','Email','Channels','Lookups','Created'],
+          row:item=>`<tr><td class="mono">${esc(item.name||item.id)}</td><td>${esc(item.email||'—')}</td><td>${item.botUsers.map(b=>`<span class="platform">${esc(b.platform)}${b.username?` · ${esc(b.username)}`:''}</span>`).join(' ')||'—'}</td><td class="mono">${fmt(item._count.lookups)}</td><td class="mono muted">${date(item.createdAt)}</td></tr>`
+        });
+      }
+      async function load(){
+        if(state.busy)return;state.busy=true;$('#main').innerHTML='<div class="loading">Loading live data…</div>';nav();
+        try{
+          const routes={dashboard:'/api/admin/dashboard',conversations:'/api/admin/conversations',companies:'/api/admin/companies',reports:'/api/admin/reports',analytics:'/api/admin/analytics',settings:'/api/admin/settings',keys:'/api/admin/api-keys',users:'/api/admin/users'};
+          let url=routes[state.tab];
+          if(['conversations','companies','reports','users'].includes(state.tab)){const params=new URLSearchParams({page:String(state.page),limit:'25'});if(state.q)params.set('q',state.q);if(state.status)params.set('status',state.status);url+=`?${params}`}
+          const data=await api(url);
+          const renderers={dashboard,conversations,companies,reports,analytics,settings,keys:apiKeys,users};
+          const notice=data.dataMode==='session_mock'?'<div class="alert" style="background:#172235;color:#aabbd2">DATABASE OFFLINE · Showing built-in fictional company fixtures. Lookup activity and reports created here last only until the server restarts; user records and prior history need PostgreSQL.</div>':data.notice?`<div class="alert" style="background:#172235;color:#aabbd2">${esc(data.notice)}</div>`:'';
+          $('#main').innerHTML=notice+renderers[state.tab](data);
+          $('#gateway').textContent=data.dataMode==='session_mock'?'VERIQ GATEWAY: MOCK MODE':'VERIQ GATEWAY: OK';wire();
+        }catch(error){$('#gateway').textContent='VERIQ GATEWAY: DEGRADED';$('#main').innerHTML=`<div class="panel"><div class="eyebrow">DATA CONNECTION</div><h2 style="font-size:14px">Could not load ${esc(state.tab)}</h2><p class="muted">${esc(error.message)}</p><button class="button primary" id="retry">RETRY</button></div>`;$('#retry')?.addEventListener('click',()=>load())}
+        finally{state.busy=false}
+      }
+      function wire(){
+        $('#main').querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>{state.tab=button.dataset.go;state.page=1;render()}));
+        $('#main').querySelectorAll('[data-page]').forEach(button=>button.addEventListener('click',()=>{state.page=Number(button.dataset.page);load()}));
+        $('#apply-filter')?.addEventListener('click',()=>{state.q=$('#list-search')?.value.trim()||'';state.status=$('#status-filter')?.value||'';state.page=1;load()});
+        $('#list-search')?.addEventListener('keydown',event=>{if(event.key==='Enter')$('#apply-filter').click()});
+        $('#main').querySelectorAll('[data-company]').forEach(button=>button.addEventListener('click',()=>companyDetail(button.dataset.company)));
+        $('#main').querySelectorAll('[data-report]').forEach(button=>button.addEventListener('click',()=>reportDetail(button.dataset.report)));
+      }
+      async function companyDetail(id){
+        try{const company=await api(`/api/admin/companies/${encodeURIComponent(id)}`);const keys=['name','registrationNumber','status','legalForm','registrationDate','liquidationDate','legalAddress','city','country','vatRegistered','vatNumber','industryName','employeeCount','revenue','profit','insolvencyStatus','sanctionsStatus','dataSource','sourceLastUpdated'];$('#overlay-root').innerHTML=`<div class="overlay" data-close><div class="dialog"><div class="eyebrow">COMPANY RECORD</div><h2>${esc(company.name)}</h2><p>${esc(company.registrationNumber)}</p><div class="detail-grid">${keys.filter(key=>key!=='name'&&key!=='registrationNumber').map(key=>`<div class="detail"><small>${esc(key.replace(/[A-Z]/g,c=>` ${c}`).replace(/^./,c=>c.toUpperCase()))}</small><span>${esc(company[key]===true?'Yes':company[key]===false?'No':company[key]??'—')}</span></div>`).join('')}</div><div class="dialog-actions"><button class="button" data-dismiss>CLOSE</button></div></div></div>`;wireDismiss()}catch(error){toast(error.message)}
+      }
+      async function reportDetail(id){
+        try{const report=await api(`/api/admin/reports/${encodeURIComponent(id)}`);const checks=report.verification?.checks||[];$('#overlay-root').innerHTML=`<div class="overlay" data-close><div class="dialog"><div class="eyebrow">TRUST REPORT · ${esc(report.verification?.status||report.lookup.resultStatus)}</div><h2>${esc(report.company.name)}</h2><p>${esc(report.company.registrationNumber)} · ${date(report.lookup.createdAt)}</p><div>${checks.map(check=>`<div class="detail"><small>${esc(check.label)} · ${esc(check.state)}</small><span>${esc(check.message)}</span></div>`).join('')||`<pre style="white-space:pre-wrap;color:#aab8ca;font-size:9px">${esc(JSON.stringify(report.verification,null,2))}</pre>`}</div><div class="dialog-actions"><button class="button" data-dismiss>CLOSE</button></div></div></div>`;wireDismiss()}catch(error){toast(error.message)}
+      }
+      function wireDismiss(){$('#overlay-root').querySelector('[data-dismiss]')?.addEventListener('click',()=>$('#overlay-root').innerHTML='');$('#overlay-root').querySelector('[data-close]')?.addEventListener('click',event=>{if(event.target===event.currentTarget)$('#overlay-root').innerHTML=''})}
+      function render(){nav();load()}
+      $('#nav').addEventListener('click',event=>{if(event.target.closest('button'))return});
+      $('#refresh').addEventListener('click',()=>load());
+      $('#trace').addEventListener('keydown',async event=>{
+        if(event.key!=='Enter')return;const query=event.currentTarget.value.trim();if(!query)return;
+        try{const result=await api('/api/admin/trace',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query})});showResult(result,query)}catch(error){toast(error.message)}
+      });
+      function showResult(result,query){const checks=result.verification?.checks||[];$('#overlay-root').innerHTML=`<div class="overlay" data-close><div class="dialog"><div class="eyebrow">TRACE RESULT · ${esc(result.source||'MOCK PROVIDER')}</div><h2>${esc(result.verification?.status||result.status||'LOOKUP')}</h2><p>Query: ${esc(query)}${result.company?` · ${esc(result.company.name)} (${esc(result.company.registrationNumber)})`:''}</p>${result.matches?.map(match=>`<div class="detail"><button class="row-link" data-company="${esc(match.id)}">${esc(match.name)}</button><small>${esc(match.registrationNumber)} · ${esc(match.status)}</small></div>`).join('')||checks.map(check=>`<div class="detail"><small>${esc(check.label)} · ${esc(check.state)}</small><span>${esc(check.message)}</span></div>`).join('')||`<p>${esc(result.verification?.warnings?.join(' ')||result.message||'No matching company was found.')}</p>`}<div class="dialog-actions"><button class="button" data-dismiss>CLOSE</button></div></div></div>`;wireDismiss();$('#overlay-root').querySelectorAll('[data-company]').forEach(button=>button.addEventListener('click',()=>companyDetail(button.dataset.company)))}
+      async function start(){
+        try{await api('/api/admin/session');$('#overlay-root').innerHTML='';$('#session-name').textContent=state.token?'ADMIN':'LOCAL ADMIN';render()}
+        catch(error){if(!$('#login-form'))showLogin(error.message)}
+      }
+      start();
+    })();
+  </script>
+</body>
+</html>

@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import Fastify from 'fastify';
 import type { FastifyError } from 'fastify';
 import cors from '@fastify/cors';
@@ -11,6 +13,7 @@ import type { AppConfig } from './config.js';
 import { createPrismaClient } from '../infrastructure/database/prisma.js';
 import { createRuntimeServices, type RuntimeServices } from './container.js';
 import { v1Routes } from '../api/routes/v1.routes.js';
+import { adminRoutes } from '../api/routes/admin.routes.js';
 import { AppError } from '../shared/app-error.js';
 
 export interface TelegramWebhookHandler {
@@ -116,6 +119,18 @@ export async function buildApp(options: BuildAppOptions) {
     rateLimit: services.rateLimit,
     prisma,
     telegramConfigured: Boolean(options.config.TELEGRAM_BOT_TOKEN),
+  });
+  await app.register(adminRoutes, {
+    prefix: '/api/admin',
+    config: options.config,
+    prisma,
+    companies: services.companies,
+  });
+
+  app.get('/admin', async (_request, reply) => {
+    const html = await readFile(resolve(process.cwd(), 'public', 'admin.html'), 'utf8');
+    reply.header('cache-control', 'no-store');
+    return reply.type('text/html; charset=utf-8').send(html);
   });
 
   if (options.telegram) {

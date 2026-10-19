@@ -10,6 +10,7 @@ const envSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().optional().default(''),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional().default(''),
   TELEGRAM_WEBHOOK_URL: z.string().url().optional().or(z.literal('')).default(''),
+  ADMIN_TOKEN: z.string().optional().default(''),
   WHATSAPP_ENABLED: z.stringbool().default(false),
   WHATSAPP_ACCESS_TOKEN: z.string().optional().default(''),
   WHATSAPP_PHONE_NUMBER_ID: z.string().optional().default(''),
@@ -29,6 +30,9 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env): AppCon
   }
   if (parsed.data.NODE_ENV === 'production' && !parsed.data.TELEGRAM_WEBHOOK_SECRET && parsed.data.TELEGRAM_BOT_TOKEN) {
     throw new Error('TELEGRAM_WEBHOOK_SECRET is required when Telegram is configured in production.');
+  }
+  if (parsed.data.NODE_ENV === 'production' && !parsed.data.ADMIN_TOKEN) {
+    throw new Error('ADMIN_TOKEN is required in production.');
   }
   return parsed.data;
 }
