@@ -1,5 +1,5 @@
 import { validAdminToken } from './shared/admin-auth.js';
-import { loadConfig } from './app/config.js';
+import { loadWorkerConfig, DeploymentConfigurationError, type WorkerEnv } from './app/worker-config.js';
 import { createRuntimeServices } from './app/container.js';
 import { createPrismaClient } from './infrastructure/database/prisma.js';
 import { adminRoutes } from './api/routes/admin.routes.js';
@@ -7,14 +7,6 @@ import { v1Routes } from './api/routes/v1.routes.js';
 import { TelegramAdapter } from './channels/telegram/telegram.adapter.js';
 import { WorkerRouter } from './app/worker-router.js';
 
-interface WorkerEnv {
-  ASSETS: { fetch(request: Request): Promise<Response> };
-  DATABASE_URL: string;
-  HYPERDRIVE?: { connectionString: string };
-  ADMIN_TOKEN: string;
-  RATE_LIMITER: { limit(options: { key: string }): Promise<{ success: boolean }> };
-  [key: string]: unknown;
-}
 
 async function handleRequest(request: Request, env: WorkerEnv): Promise<Response> {
   const url = new URL(request.url);
@@ -28,10 +20,9 @@ async function handleRequest(request: Request, env: WorkerEnv): Promise<Response
     response.headers.set('X-Frame-Options', 'DENY');
     return response;
   }
-  const limit = await env.RATE_LIMITER.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' });
+  const config = loadWorkerConfig(env);
+  const limit = await env.RATE_LIMITER!.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' });
   if (!limit.success) return Response.json({ error: { code: 'RATE_LIMITED', message: 'Request limit reached.' } }, { status: 429, headers: { 'retry-after': '60' } });
-  const environment = Object.fromEntries(Object.entries(env).filter((entry): entry is [string, string] => typeof entry[1] === 'string'));
-  const config = loadConfig({ ...environment, NODE_ENV: 'production', DATABASE_URL: env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL ?? '', ADMIN_TOKEN: env.ADMIN_TOKEN ?? '' });
   const publicRoute = ['/health', '/api/v1/health', '/api/v1/telegram/webhook'].includes(url.pathname);
   if (!publicRoute && !validAdminToken(request.headers.get('authorization') ?? undefined, config.ADMIN_TOKEN)) {
     return Response.json({ error: { code: 'ADMIN_ACCESS_DENIED', message: 'Admin token required.' } }, { status: 401, headers: { 'cache-control': 'no-store' } });
@@ -64,6 +55,10 @@ export default {
     try {
       return await handleRequest(request, env);
     } catch (error) {
+      if (error instanceof DeploymentConfigurationError) {
+        console.error(JSON.stringify({ event: 'worker_configuration_failed', code: error.code }));
+        return Response.json({ error: { code: error.code, message: error.message } }, { status: 503, headers: { 'cache-control': 'no-store' } });
+      }
       console.error(JSON.stringify({ event: 'worker_request_failed', errorName: error instanceof Error ? error.name : 'unknown' }));
       return Response.json({ error: { code: 'SERVICE_UNAVAILABLE', message: 'Service is unavailable. Check deployment configuration and database connectivity.' } }, { status: 503, headers: { 'cache-control': 'no-store' } });
     }

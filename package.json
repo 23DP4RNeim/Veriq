@@ -24,7 +24,8 @@
     "bot:webhook": "tsx src/bot-webhook.ts",
     "cf:dev": "npm run db:generate && wrangler dev",
     "cf:check": "npm run db:generate && wrangler deploy --dry-run",
-    "cf:deploy": "npm run db:generate && wrangler deploy"
+    "cf:deploy": "npm run db:generate && wrangler deploy",
+    "cf:setup": "node scripts/setup-cloudflare.mjs"
   },
   "dependencies": {
     "@cfworker/json-schema": "^4.1.1",

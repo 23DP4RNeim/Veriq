@@ -2,6 +2,32 @@
 
 This deployment serves the admin page and its API on the same HTTPS domain. It runs on Cloudflare independently of your computer; PostgreSQL records live in Supabase. Use **Workers**, not a static Pages upload: uploading only `admin.html` cannot run the API.
 
+## Verified live deployment
+
+Admin console: [https://veriq.a230323mo.workers.dev/admin](https://veriq.a230323mo.workers.dev/admin)
+
+Health: [https://veriq.a230323mo.workers.dev/health](https://veriq.a230323mo.workers.dev/health)
+
+This is the address returned by Wrangler for the authenticated Cloudflare account. Health, admin authentication, company reads, and the dashboard were verified against Supabase after deployment. Use `ADMIN_TOKEN` from your ignored `.env` or `.dev.vars` file to sign in. The previously supplied `veriq.a230863rn.workers.dev` is a different Workers subdomain; this login/deployment did not update that address.
+
+## Fix the live "Service is unavailable" error
+
+Local `.env` and `.dev.vars` files do not automatically become Cloudflare Worker secrets. A deployed Worker needs `ADMIN_TOKEN`, a database connection, and the bindings in `wrangler.jsonc`. Supabase also needs the Hyperdrive configuration described below.
+
+In this repository's terminal, run:
+
+```sh
+npx wrangler login
+npm run cf:setup
+npm run cf:deploy
+```
+
+`cf:setup` reads the existing ignored environment files, uploads the Supabase CA certificate, creates Hyperdrive using the session pooler with verified TLS and query caching disabled, adds the `HYPERDRIVE` binding to `wrangler.jsonc`, and uploads the Worker secrets. It uses an existing HYPERDRIVE binding if already configured. If you belong to multiple Cloudflare accounts, set `CLOUDFLARE_ACCOUNT_ID` to the account containing your Worker before setup. Review/commit the updated `wrangler.jsonc` after setup so future Git deployments keep that binding. Your passwords and admin token stay out of Git.
+
+After deploying, open `https://veriq.a230323mo.workers.dev/health`. It should report `status: "ok"` and `database: "ok"`. Open `/admin` and sign in using `ADMIN_TOKEN` from the local ignored environment file. If you previously used a different admin token online, use the token that setup uploaded.
+
+New deployments identify missing secrets/bindings with specific errors instead of the generic message. `DEPLOYMENT_NOT_CONFIGURED` lists missing settings; `HYPERDRIVE_REQUIRED` means the Supabase binding has not been configured. These messages never include secret values. Authentication must be completed in the same environment that runs setup.
+
 ## Your Supabase project
 
 Project URL: `https://flmiawgapelpymjoxbcf.supabase.co`
@@ -41,7 +67,7 @@ Live testing confirmed that Node/Prisma connects with the bundled Supabase CA. T
 "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "YOUR_HYPERDRIVE_ID" }]
 ```
 
-The Worker prefers `HYPERDRIVE.connectionString` over `DATABASE_URL`. Hyperdrive handles TLS to Supabase. See [Cloudflare's CA certificate configuration](https://developers.cloudflare.com/hyperdrive/configuration/tls-ssl-certificates-for-hyperdrive/) for dashboard and CLI instructions. Creating this configuration still requires your Cloudflare account login; it has not been provisioned in this workspace.
+The Worker prefers `HYPERDRIVE.connectionString` over `DATABASE_URL`. Hyperdrive handles TLS to Supabase. See [Cloudflare's CA certificate configuration](https://developers.cloudflare.com/hyperdrive/configuration/tls-ssl-certificates-for-hyperdrive/) for dashboard and CLI instructions. This workspace now has a provisioned `HYPERDRIVE` binding in `wrangler.jsonc`. Other accounts/environments need their own login and setup.
 
 ## 3. Deploy the Worker
 
@@ -78,7 +104,11 @@ The import downloads the UR datasets and writes directly to Supabase. Allow enou
 
 If you need existing local users, reports, or history, transfer those separately after running the SQL and before starting imports. Back up the local database, export only application data with `pg_dump --data-only --schema=public --exclude-table=public._prisma_migrations`, and restore that export into Supabase using `psql` with the session pooler connection. The setup SQL itself contains no existing local data. Do not import Supabase `auth` or `storage` schemas or overwrite the migration ledger.
 
-## 5. Optional Telegram webhook
+## 5. Telegram webhook
+
+Configured bot: [@Veriq_bot_bot](https://t.me/Veriq_bot_bot). Its webhook is registered at `https://veriq.a230323mo.workers.dev/api/v1/telegram/webhook`. Open the bot in Telegram and send `/start`. Credentials are stored in ignored local environment files and Cloudflare Worker secrets.
+
+For a new environment or token change:
 
 Cloudflare uses webhook mode; it does not run the local polling process.
 
