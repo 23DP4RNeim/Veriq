@@ -92,7 +92,7 @@ For automatic deployments from GitHub, create a **Workers** project connected to
 
 ## 4. Populate real company data online
 
-The default cloud provider is `ur_open_data`. The SQL creates empty tables; it does not copy your local records or invent real company data. Until the import completes, company searches return no matches.
+The default cloud provider is `ur_open_data`. The SQL creates empty tables; it does not copy your local records or invent real company data. Registration-number lookups missing from Supabase now fetch and save basic records from the official UR public DataStore. Company-name searches use the existing mirror; run the bulk import for broad name-search coverage, historical names, financials, and the other available enrichment.
 
 To import and refresh data without leaving your computer running, push this repository to GitHub, then configure the included **Sync Latvian company data to Supabase** workflow:
 

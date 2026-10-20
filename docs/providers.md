@@ -4,7 +4,11 @@ The application depends on `CompanyDataProvider` in `src/modules/providers/compa
 
 ## UR daily open data
 
-`UrCompanyDataProvider` queries a local PostgreSQL mirror populated by `npm run data:sync:ur`. The sync uses the Latvian Open Data Portal CKAN catalogue API to discover resources and downloads public CSV files published by the Latvian Register of Enterprises. UR’s company registry dataset is refreshed daily and is licensed CC0-1.0.
+`UrCompanyDataProvider` queries the PostgreSQL mirror in Supabase. When a registration number is missing from that mirror, it discovers the official register dataset through the Latvian Open Data Portal catalog and performs a filtered CKAN DataStore request. It saves the basic official record to Supabase, so a full registry import is not required for a registration-number lookup. `LV40103867145` is normalized to `40103867145`; the `LV` prefix is accepted as input but does not establish VAT registration.
+
+The on-demand result includes the current name, registration number, legal form, registration/termination dates, registry status, legal address, postal code, and catalog source-update date. Missing VAT, insolvency, sanctions, annual-report, and financial fields stay unknown. Existing records from the bulk importer keep their enrichment. Unknown upstream responses or outages become `DATA_UNAVAILABLE`, not a false `NOT_FOUND`. Results use the existing one-hour provider cache; name searches query the mirror.
+
+The mirror can also be populated and refreshed by `npm run data:sync:ur`. The sync uses the Latvian Open Data Portal CKAN catalogue API to discover resources and downloads public CSV files published by the Latvian Register of Enterprises. UR’s company registry dataset is refreshed daily and is licensed CC0-1.0.
 
 Imported fields include the 11-digit registration number, current and historical names, subject type/legal form, registration and termination dates, legal address and postal code, registered activity descriptions, latest paid-up capital, latest available employee count, revenue, profit, total assets, equity, liabilities, reporting year/currency, and a narrowly interpreted UR sanctions-risk match. Fields absent from the source remain null/unknown.
 
@@ -16,7 +20,7 @@ npm run data:sync:ur
 
 The importer uses the register, name-history, registered-activity, paid-up-capital, financial-statement metadata, balance-sheet, income-statement, and sanctions-risk files. It upserts Commercial Register entries and only reports the latest filing in the model. It does not import shareholder or beneficial-owner data. Sanctions records may identify a person related to an entity; only a record where the company itself is the listed legal subject is applied as a potential company match. Absence from that risk file is not represented as a clean sanctions result.
 
-Open datasets are public bulk downloads, not a low-latency per-company API. Run the sync again to refresh the local mirror. It downloads hundreds of megabytes and is not scheduled automatically. Requests are unauthenticated; there are no API credentials to configure.
+The public register resource supports filtered CKAN DataStore queries, which the registration-number fallback uses. The richer datasets are imported as public bulk downloads. Run the sync to refresh and enrich the mirror, or enable the included daily GitHub Actions workflow. The full importer downloads hundreds of megabytes. Requests are unauthenticated; there are no API credentials to configure.
 
 The UR info portal provides free access to current data for human users. UR’s system-to-system web services have a separate application and provisioning process through the VISS/API Manager. Consult [UR’s official web service list](https://www.ur.gov.lv/lv/registra-api-timekla-pakalpju-servisu-saraksts), [UR info service](https://www.ur.gov.lv/lv/informacija-e-pakalpojuma-infourgovlv), [the UR open dataset](https://data.gov.lv/dati/dataset/uz), [annual financial data](https://data.gov.lv/dati/dataset/gada-parskatu-finansu-dati), [registered activities](https://data.gov.lv/dati/dataset/area-of-activity), [paid-up capital](https://data.gov.lv/dati/dataset/equity-capitals), and [sanctions-risk data](https://data.gov.lv/dati/dataset/sanctions).
 

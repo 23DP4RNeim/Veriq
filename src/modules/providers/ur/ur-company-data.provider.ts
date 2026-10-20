@@ -1,6 +1,7 @@
-import type { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient } from '@prisma/client';
 import { namesMatch, normalizeCompanyName, normalizeRegistrationNumber } from '../../companies/company.normalization.js';
 import type { CompanyPerson, CompanyRecord, CompanySearchResult } from '../../companies/company.types.js';
+import { UrOpenDataClient } from './ur-open-data.client.js';
 import type { CompanyDataProvider } from '../company-data-provider.js';
 
 export const UR_OPEN_DATA_SOURCE = 'Latvian Register of Enterprises Open Data (CC0)';
@@ -55,12 +56,29 @@ function companyRecord(row: Awaited<ReturnType<PrismaClient['company']['findUniq
 export class UrCompanyDataProvider implements CompanyDataProvider {
   readonly name = 'ur-open-data';
 
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaClient, private readonly openData = new UrOpenDataClient()) {}
 
   async searchByRegistrationNumber(registrationNumber: string): Promise<CompanyRecord | null> {
     const normalized = normalizeRegistrationNumber(registrationNumber);
-    const row = await this.prisma.company.findFirst({
-      where: { registrationNumber: normalized, dataSource: UR_OPEN_DATA_SOURCE },
+    const existing = await this.prisma.company.findUnique({ where: { registrationNumber: normalized } });
+    if (existing?.dataSource === UR_OPEN_DATA_SOURCE) return companyRecord(existing);
+    const fields = await this.openData.findByRegistrationNumber(normalized);
+    if (!fields) return null;
+    // A number miss can be resolved without downloading the full registry.
+    // Never carry fictional/provider-specific risk or financial fields into a UR record.
+    const unsupportedFields = {
+      previousNames: [], city: null, vatRegistered: null, vatNumber: null,
+      industryCode: null, industryName: null, boardMembers: Prisma.DbNull, shareholders: Prisma.DbNull,
+      beneficialOwners: Prisma.DbNull, annualReportAvailable: null, lastAnnualReportDate: null,
+      revenue: null, profit: null, employeeCount: null, totalAssets: null, equity: null,
+      totalLiabilities: null, financialYear: null, financialCurrency: null,
+      paidUpCapital: null, capitalCurrency: null,
+      insolvencyStatus: 'UNKNOWN' as const, sanctionsStatus: 'UNKNOWN' as const,
+    };
+    const row = await this.prisma.company.upsert({
+      where: { registrationNumber: normalized },
+      create: { ...unsupportedFields, ...fields, dataSource: UR_OPEN_DATA_SOURCE },
+      update: { ...(existing ? unsupportedFields : {}), ...fields, dataSource: UR_OPEN_DATA_SOURCE },
     });
     return companyRecord(row);
   }
