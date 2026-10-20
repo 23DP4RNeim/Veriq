@@ -2,6 +2,16 @@
 
 This deployment serves the admin page and its API on the same HTTPS domain. It runs on Cloudflare independently of your computer; PostgreSQL records live in Supabase. Use **Workers**, not a static Pages upload: uploading only `admin.html` cannot run the API.
 
+## Your Supabase project
+
+Project URL: `https://flmiawgapelpymjoxbcf.supabase.co`
+
+Project dashboard: [Open your Supabase project](https://supabase.com/dashboard/project/flmiawgapelpymjoxbcf)
+
+The supplied anon API key is for Supabase's browser/Data API. This app connects through Prisma and requires the PostgreSQL connection URI instead. The API key is not used or stored by the app. The transaction pooler hostname is confirmed as `aws-0-eu-west-1.pooler.supabase.com`. The database connection has been configured in ignored local `.env` and `.dev.vars` files and verified against Supabase. The live Node/Prisma connection works. Cloudflare requires the Hyperdrive setup below because its raw PostgreSQL socket adapter does not use the custom CA certificate.
+
+Open the project dashboard, click **Connect → Transaction pooler**, and copy the URI. The pooled username for this project is `postgres.flmiawgapelpymjoxbcf`. Use the exact hostname shown in that panel. Enter the completed URI privately with `npx wrangler secret put DATABASE_URL` for the deployed Worker, or in an ignored `.dev.vars` file for local preview. `.dev.vars.example` contains your project reference and confirmed pooler hostname. Replace `ENCODED_PASSWORD` with your URL-encoded database password. Use your actual database password only in ignored environment files or Cloudflare secrets.
+
 ## 1. Create the Supabase database
 
 1. Create a Supabase project and save its database password.
@@ -9,15 +19,31 @@ This deployment serves the admin page and its API on the same HTTPS domain. It r
 3. Use a fresh project with no Veriq tables. The SQL runs in one transaction and fails safely if application tables already exist. It includes all 10 application tables, enums, foreign keys, indexes, RLS, and the Prisma migration ledger. Do not use this initial setup file for upgrades.
 4. In **Connect → Transaction pooler**, copy the PostgreSQL URI (port **6543**). Use the `postgres.PROJECT_REF` username and actual hostname shown in your dashboard. URL-encode special characters in your password. Append `?sslmode=verify-full` to verify TLS certificates. A Supabase anon/publishable/service-role API key is **not** a database password or a `DATABASE_URL`.
 
-Example only:
+Your project connection template (replace `ENCODED_PASSWORD`):
 
 ```text
-postgresql://postgres.PROJECT_REF:ENCODED_PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?sslmode=verify-full
+postgresql://postgres.flmiawgapelpymjoxbcf:ENCODED_PASSWORD@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=verify-full
 ```
 
-The backend connects through Prisma's PostgreSQL driver adapter. Browser clients have no table permissions or RLS policies, and no database credentials appear in `admin.html`. The backend uses the PostgreSQL account, which bypasses RLS; keep that credential in secrets only.
+The backend connects through Prisma's PostgreSQL driver adapter. For Supabase shared pooler hosts, the adapter includes Supabase's public CA certificate and explicitly verifies TLS certificates and hostnames; Node's default trust store alone does not trust this pooler's CA. Keep the bundled public certificate current when Supabase rotates it. [Supabase TLS documentation](https://supabase.com/docs/guides/platform/ssl-enforcement). Browser clients have no table permissions or RLS policies, and no database credentials appear in `admin.html`. The backend uses the PostgreSQL account, which bypasses RLS; keep that credential in secrets only.
 
-## 2. Deploy the Worker
+## 2. Configure Hyperdrive for the Supabase pooler
+
+Live testing confirmed that Node/Prisma connects with the bundled Supabase CA. The Workers raw PostgreSQL socket adapter failed with `UnknownIssuer` even when that CA was supplied. Use Hyperdrive with an uploaded CA for the deployed Worker; adding only `DATABASE_URL` is insufficient for this pooler.
+
+1. Authenticate with `npx wrangler login`.
+2. Download [Supabase's public CA certificate](https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt).
+3. In the Cloudflare dashboard, create a Hyperdrive configuration for a PostgreSQL database using the Supabase **session pooler**: host `aws-0-eu-west-1.pooler.supabase.com`, port `5432`, database `postgres`, username `postgres.flmiawgapelpymjoxbcf`, and your database password. Use the session pooler rather than stacking transaction poolers.
+4. Configure TLS as **Verify full**, uploading the Supabase CA certificate. Disable Hyperdrive query caching so the admin console reads current records.
+5. Copy the configuration ID and add this top-level property to `wrangler.jsonc` (replace the placeholder):
+
+```json
+"hyperdrive": [{ "binding": "HYPERDRIVE", "id": "YOUR_HYPERDRIVE_ID" }]
+```
+
+The Worker prefers `HYPERDRIVE.connectionString` over `DATABASE_URL`. Hyperdrive handles TLS to Supabase. See [Cloudflare's CA certificate configuration](https://developers.cloudflare.com/hyperdrive/configuration/tls-ssl-certificates-for-hyperdrive/) for dashboard and CLI instructions. Creating this configuration still requires your Cloudflare account login; it has not been provisioned in this workspace.
+
+## 3. Deploy the Worker
 
 Use Node.js 22+ (Node.js 24 recommended):
 
@@ -38,7 +64,7 @@ Check `/health`: it should return `status: "ok"` and `database: "ok"`. The conso
 
 For automatic deployments from GitHub, create a **Workers** project connected to this repository. Use build command `npm run db:generate && npm run typecheck` and deploy command `npm run cf:deploy`; set the two secrets on that Worker first. `wrangler.jsonc` is the deployment configuration. You can add a custom domain under the Worker's **Settings → Domains & Routes**.
 
-## 3. Populate real company data online
+## 4. Populate real company data online
 
 The default cloud provider is `ur_open_data`. The SQL creates empty tables; it does not copy your local records or invent real company data. Until the import completes, company searches return no matches.
 
@@ -52,7 +78,7 @@ The import downloads the UR datasets and writes directly to Supabase. Allow enou
 
 If you need existing local users, reports, or history, transfer those separately after running the SQL and before starting imports. Back up the local database, export only application data with `pg_dump --data-only --schema=public --exclude-table=public._prisma_migrations`, and restore that export into Supabase using `psql` with the session pooler connection. The setup SQL itself contains no existing local data. Do not import Supabase `auth` or `storage` schemas or overwrite the migration ledger.
 
-## 4. Optional Telegram webhook
+## 5. Optional Telegram webhook
 
 Cloudflare uses webhook mode; it does not run the local polling process.
 
@@ -68,10 +94,16 @@ Use a random Telegram webhook secret containing only letters, digits, underscore
 ```sh
 cp .dev.vars.example .dev.vars
 # Fill in the real database URI and your admin token in .dev.vars.
+npm run dev
+```
+
+For this Supabase pooler, `npm run dev` is the verified local Node preview at `http://localhost:3000/admin` (it reads `.env`). The raw Workers preview cannot validate the pooler CA; use a configured Hyperdrive binding with remote preview to test the cloud database path.
+
+```sh
 npm run cf:dev
 ```
 
-Preview at `http://localhost:8787/admin`. The preview uses the database you configure, so use a separate Supabase development project when needed. `.dev.vars` is ignored by Git. `.env` remains the configuration for standalone Node commands, seeds, and imports.
+The Workers preview listens at `http://localhost:8787/admin`; its database path requires the Hyperdrive configuration above. The preview uses the database you configure, so use a separate Supabase development project when needed. `.dev.vars` is ignored by Git. `.env` remains the configuration for standalone Node commands, seeds, and imports.
 
 For later releases, apply new committed Prisma migrations using `npm run db:migrate:deploy` with `DATABASE_URL` set to the session pooler URI, then run `npm run cf:deploy`. The initial SQL has already recorded the three existing migrations, so they will not be replayed. Do not run `db:migrate` against production. The Node server still serves Swagger UI at `/docs`; the Worker serves the API and admin console without Swagger UI. Same-origin access needs no CORS configuration.
 

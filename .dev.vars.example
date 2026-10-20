@@ -1,3 +1,5 @@
 # Copy to .dev.vars for `npm run cf:dev`. Never commit .dev.vars.
-DATABASE_URL="postgresql://postgres.PROJECT:ENCODED_PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?sslmode=verify-full"
+# Project pooler hostname confirmed from the Supabase Connect panel.
+# ENCODED_PASSWORD is the database password, not the anon API key.
+DATABASE_URL="postgresql://postgres.flmiawgapelpymjoxbcf:ENCODED_PASSWORD@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=verify-full"
 ADMIN_TOKEN="replace-with-a-long-random-token"
