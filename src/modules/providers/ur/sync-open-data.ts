@@ -1,11 +1,15 @@
 import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
+import type { ReadableStream } from 'node:stream/web';
 import { parse } from 'csv-parse';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { UR_OPEN_DATA_SOURCE } from './ur-company-data.provider.js';
 
-const prisma = new PrismaClient();
+import { createPrismaClient } from '../../../infrastructure/database/prisma.js';
+import { loadConfig } from '../../../app/config.js';
+
+const prisma = createPrismaClient(loadConfig());
 const CATALOG_API = 'https://data.gov.lv/dati/api/3/action/package_show?id=';
 const CSV_TIMEOUT_MS = 10 * 60 * 1000;
 const BATCH_SIZE = 250;
@@ -47,7 +51,7 @@ async function* csvRows(url: string): AsyncGenerator<Record<string, string>> {
     try {
       const response = await fetch(url, { signal: AbortSignal.timeout(CSV_TIMEOUT_MS) });
       if (!response.ok || !response.body) throw new Error(`Open data download failed (${response.status}).`);
-      input = Readable.fromWeb(response.body as import('node:stream/web').ReadableStream<Uint8Array>);
+      input = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
       parser = input.pipe(parse({ bom: true, columns: true, delimiter: ';', skip_empty_lines: true, relax_quotes: true, relax_column_count: true }));
       input.on('error', (error: Error) => parser?.destroy(error));
       for await (const row of parser) yield row as Record<string, string>;

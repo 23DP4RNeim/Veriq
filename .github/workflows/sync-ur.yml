@@ -1,0 +1,26 @@
+name: Sync Latvian company data to Supabase
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 4 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: supabase-ur-import
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: ${{ vars.ENABLE_UR_SYNC == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run data:sync:ur
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}

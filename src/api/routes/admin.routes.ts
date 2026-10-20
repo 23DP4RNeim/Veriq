@@ -1,8 +1,10 @@
-import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import type { AppConfig } from '../../app/config.js';
 import type { PrismaClient } from '@prisma/client';
 import type { CompanyApplicationService } from '../../modules/companies/company.service.js';
+import { validAdminToken } from '../../shared/admin-auth.js';
+import { AppError } from '../../shared/app-error.js';
 import { identifyQuery, namesMatch } from '../../modules/companies/company.normalization.js';
 import type { CompanyRecord } from '../../modules/companies/company.types.js';
 import { MOCK_COMPANIES } from '../../modules/providers/mock/companies.data.js';
@@ -38,11 +40,7 @@ function isLoopback(address: string): boolean {
 
 function authorized(request: FastifyRequest, token: string): boolean {
   if (!token) return isLoopback(request.ip);
-  const authorization = request.headers.authorization;
-  if (!authorization?.startsWith('Bearer ')) return false;
-  const supplied = Buffer.from(authorization.slice(7));
-  const expected = Buffer.from(token);
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+  return validAdminToken(request.headers.authorization, token);
 }
 
 function pageOptions(query: PageQuery) {
@@ -76,16 +74,21 @@ export const adminRoutes: FastifyPluginAsync<AdminRouteDependencies> = async (ap
     }
   });
   const isDatabaseReady = async (request: FastifyRequest): Promise<boolean> => {
-    if (databaseState && Date.now() - databaseState.checkedAt < 5000) return databaseState.ready;
+    if (databaseState && Date.now() - databaseState.checkedAt < 5000) {
+      if (!databaseState.ready && config.NODE_ENV === 'production') throw new AppError('PROVIDER_UNAVAILABLE', 'Database is unavailable.');
+      return databaseState.ready;
+    }
     try {
       const [result] = await prisma.$queryRaw<Array<{ ready: boolean }>>`
         SELECT to_regclass('public.companies') IS NOT NULL
           AND to_regclass('public.lookup_history') IS NOT NULL AS ready
       `;
       databaseState = { ready: result?.ready === true, checkedAt: Date.now() };
+      if (!databaseState.ready && config.NODE_ENV === 'production') throw new AppError('PROVIDER_UNAVAILABLE', 'Database schema is not ready. Run the Supabase setup SQL.');
       return databaseState.ready;
     } catch (error) {
       request.log.warn({ errorName: error instanceof Error ? error.name : 'unknown' }, 'Admin database is unavailable');
+      if (config.NODE_ENV === 'production') throw new AppError('PROVIDER_UNAVAILABLE', 'Database is unavailable. Please try again later.');
       databaseState = { ready: false, checkedAt: Date.now() };
       return false;
     }

@@ -1,8 +1,11 @@
 import 'dotenv/config';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { MOCK_COMPANIES } from '../src/modules/providers/mock/companies.data.js';
 
-const prisma = new PrismaClient();
+import { createPrismaClient } from '../src/infrastructure/database/prisma.js';
+import { loadConfig } from '../src/app/config.js';
+
+const prisma = createPrismaClient(loadConfig());
 
 function jsonField(value: unknown): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput {
   return value === null ? Prisma.DbNull : JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;

@@ -4,6 +4,10 @@
 
 Veriq is a modular TypeScript app for Latvian company lookup and transparent business verification. It can use fictional fixtures or daily open datasets published by the Latvian Register of Enterprises (UR). Results are decision support, not a legally authoritative determination, credit rating, sanctions clearance, or cybersecurity scan.
 
+## Cloud hosting (Cloudflare + Supabase)
+
+Follow [the deployment guide](docs/cloudflare-supabase.md) to publish the admin console and API on one Cloudflare Worker. Run [supabase/setup.sql](supabase/setup.sql) once in a fresh Supabase project for the complete database setup, then configure the Worker secrets and deploy with `npm run cf:deploy`. An optional GitHub Actions workflow refreshes company data directly in Supabase daily.
+
 ## Architecture
 
 ```text
@@ -54,7 +58,7 @@ npm run dev
 
 The API listens on `http://localhost:3000`. Health check: `GET http://localhost:3000/health`. OpenAPI: `http://localhost:3000/docs`.
 
-Open the admin console at `http://localhost:3000/admin`. In development, admin data endpoints are available only to loopback requests unless `ADMIN_TOKEN` is set; with a token configured, enter it in the console when prompted. Production requires `ADMIN_TOKEN`. When PostgreSQL is available, the dashboard reads persisted lookup, company, report, and user data. Without it, the dashboard automatically switches to the built-in fictional company fixtures; lookups and verification reports created in this mode are held in memory for the current server process only, and user records/prior lookup history remain unavailable. Conversation entries represent lookup activity (the MVP does not store chat transcripts); trust reports display the existing verification checks. API-key inventory is informational because keys are not stored by this application.
+Open the admin console at `http://localhost:3000/admin`. In development, admin data endpoints are available only to loopback requests unless `ADMIN_TOKEN` is set; with a token configured, enter it in the console when prompted. Production requires `ADMIN_TOKEN`. When PostgreSQL is available, the dashboard reads persisted lookup, company, report, and user data. In development, without it, the dashboard automatically switches to the built-in fictional company fixtures; lookups and verification reports created in this mode are held in memory for the current server process only, and user records/prior lookup history remain unavailable. Conversation entries represent lookup activity (the MVP does not store chat transcripts); trust reports display the existing verification checks. API-key inventory is informational because keys are not stored by this application.
 
 `db:migrate` uses `prisma migrate dev` and creates a migration if needed. For production use the committed migration history with `npm run db:migrate:deploy`. Do not run development migrations against production.
 

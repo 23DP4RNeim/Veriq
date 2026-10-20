@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -21,29 +21,37 @@
     "db:seed": "tsx prisma/seed.ts",
     "data:sync:ur": "tsx src/modules/providers/ur/sync-open-data.ts",
     "bot:dev": "tsx src/bot-polling.ts",
-    "bot:webhook": "tsx src/bot-webhook.ts"
+    "bot:webhook": "tsx src/bot-webhook.ts",
+    "cf:dev": "npm run db:generate && wrangler dev",
+    "cf:check": "npm run db:generate && wrangler deploy --dry-run",
+    "cf:deploy": "npm run db:generate && wrangler deploy"
   },
   "dependencies": {
+    "@cfworker/json-schema": "^4.1.1",
     "@fastify/cors": "^10.1.0",
     "@fastify/helmet": "^12.0.0",
     "@fastify/rate-limit": "^10.3.0",
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
+    "@prisma/adapter-pg": "^6.19.0",
     "@prisma/client": "^6.19.0",
     "csv-parse": "^7.0.3",
     "dotenv": "^16.6.1",
     "fastify": "^5.6.2",
     "grammy": "^1.38.2",
+    "pg": "^8.23.1",
     "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
+    "@types/pg": "^8.23.1",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
     "eslint": "^9.37.0",
     "prisma": "^6.19.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.151.2"
   }
 }
