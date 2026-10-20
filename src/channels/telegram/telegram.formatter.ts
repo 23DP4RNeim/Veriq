@@ -7,6 +7,11 @@ export function formatVerification(company: CompanyRecord, verification: Verific
     : verification.status === 'WARNING' ? '🟡 WARNING'
       : '🔴 NOT VERIFIED';
   const registered = company.registrationDate ? formatDate(company.registrationDate) : 'Not available';
+  const workingWithSummary = verification.status === 'NOT_VERIFIED'
+    ? 'Resolve critical issues before proceeding.'
+    : verification.status === 'WARNING'
+      ? 'Review the warnings and verify key details independently.'
+      : 'No issues were flagged in the checked fields; complete your usual due diligence.';
   const lines = [
     'VERIQ',
     'BUSINESS VERIFICATION',
@@ -15,6 +20,7 @@ export function formatVerification(company: CompanyRecord, verification: Verific
     `Registration: ${company.registrationNumber}`,
     `Status: ${company.status === 'ACTIVE' ? '🟢' : company.status === 'LIQUIDATED' ? '🔴' : '⚪'} ${company.status}`,
     `Verification: ${statusLabel}`,
+    `Working with them: ${workingWithSummary}`,
     `Legal form: ${company.legalForm ?? 'Not available'}`,
     `Registered: ${registered}`,
     '',
@@ -28,7 +34,7 @@ export function formatVerification(company: CompanyRecord, verification: Verific
   if (verification.criticalIssues.length > 0) {
     lines.push('', 'Critical issues:', ...verification.criticalIssues.map((issue) => `✖ ${issue}`));
   }
-  lines.push(`Source: ${company.dataSource}`, `Checked: ${formatDateTime(new Date(verification.checkedAt))}`, 'Based on available data; not a legally authoritative determination.');
+  lines.push(`Source: ${company.dataSource}`, `Checked: ${formatDateTime(new Date(verification.checkedAt))}`, 'Based on available data; not a legal, credit, or cybersecurity rating.');
 
   if (full) {
     lines.push('', 'VERIFICATION CHECKS');

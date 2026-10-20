@@ -93,19 +93,20 @@ export class TelegramAdapter implements ChannelAdapter {
     this.bot.command('start', async (context) => {
       const actor = await this.actor(context);
       if (actor) this.awaitingQuery.delete(actor.platformUserId);
-      await context.reply('Welcome to Veriq.\n\nVerify companies using structured business data. Results are based on available data.', {
+      await context.reply('Welcome to Veriq.\n\nAssess a business using available registration and risk indicators. Results are decision support, not a guarantee, credit rating, or cybersecurity scan.', {
         reply_markup: mainMenuKeyboard(),
       });
     });
 
     this.bot.command('help', async (context) => {
-      await context.reply('Send a Latvian registration number or company name to look it up.\n\nExamples:\n/check 40103999999\n/check SIA Baltic Example\n\nUse /history to view recent checks and /settings to change report detail.');
+      await context.reply('Send a Latvian registration number or company name to assess a business.\n\nExamples:\n/assess 40103999999\n/check SIA Baltic Example\n\nUse /history to view recent checks and /settings to change report detail.');
     });
 
     this.bot.command('check', async (context) => {
       await this.handleCheckCommand(context);
     });
     this.bot.command('company', async (context) => this.handleCheckCommand(context));
+    this.bot.command('assess', async (context) => this.handleCheckCommand(context));
 
     this.bot.command('history', async (context) => {
       const actor = await this.actor(context);

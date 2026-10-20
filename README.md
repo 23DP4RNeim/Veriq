@@ -106,7 +106,7 @@ Other routes include `GET /api/v1/companies/:id`, company and user history, `POS
 2. Set `TELEGRAM_BOT_TOKEN` in `.env`; never paste it into source code or commit it.
 3. Start PostgreSQL and run migrations plus the mock seed.
 4. In another terminal, run `npm run bot:dev` to use Telegram long polling locally.
-5. In Telegram, open the bot and send `/start`, then `/check`, `/history`, or `/help`. Direct text such as `40103999999` also runs a lookup.
+5. In Telegram, open the bot and send `/start`, then `/assess 40103999999`, `/check`, `/history`, or `/help`. Direct text such as `40103999999` also runs a lookup. `/assess` is an alias for `/check`: it gives a plain-language due-diligence summary from the same verification checks, not a business ranking, credit rating, or cybersecurity scan.
 
 For webhook mode, deploy behind public HTTPS, set `TELEGRAM_WEBHOOK_URL` to the public endpoint including `/api/v1/telegram/webhook`, set a long random `TELEGRAM_WEBHOOK_SECRET`, and run `npm run bot:webhook`. That process registers the webhook and runs the API. Polling and webhook modes should not run for the same bot at the same time. Local polling is the simplest development path.
 
