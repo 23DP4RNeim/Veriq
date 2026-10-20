@@ -15,6 +15,11 @@ export function normalizeRegistrationNumber(input: string): string {
 }
 
 const LEGAL_SUFFIXES = new Set(['sia', 'as', 'a/s', 'ik', 'ltd', 'limited', 'llc']);
+const LEGAL_FORM_PREFIXES = [
+  ['sabiedrība', 'ar', 'ierobežotu', 'atbildību'],
+  ['akciju', 'sabiedrība'],
+  ['individuālais', 'komersants'],
+] as const;
 
 export function normalizeCompanyName(input: string): string {
   const normalized = input
@@ -25,6 +30,12 @@ export function normalizeCompanyName(input: string): string {
     .trim();
 
   const tokens = normalized.split(' ').filter(Boolean);
+  for (const prefix of LEGAL_FORM_PREFIXES) {
+    if (tokens.length > prefix.length && prefix.every((token, index) => tokens[index] === token)) {
+      tokens.splice(0, prefix.length);
+      break;
+    }
+  }
   while (tokens.length > 1 && LEGAL_SUFFIXES.has(tokens[0] ?? '')) tokens.shift();
   while (tokens.length > 1 && LEGAL_SUFFIXES.has(tokens.at(-1) ?? '')) tokens.pop();
   return tokens.join(' ');

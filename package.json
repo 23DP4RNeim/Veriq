@@ -19,6 +19,7 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "data:sync:ur": "tsx src/modules/providers/ur/sync-open-data.ts",
     "bot:dev": "tsx src/bot-polling.ts",
     "bot:webhook": "tsx src/bot-webhook.ts"
   },
@@ -29,6 +30,7 @@
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
     "@prisma/client": "^6.19.0",
+    "csv-parse": "^7.0.3",
     "dotenv": "^16.6.1",
     "fastify": "^5.6.2",
     "grammy": "^1.38.2",

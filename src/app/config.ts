@@ -6,7 +6,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   HOST: z.string().default('0.0.0.0'),
   DATABASE_URL: z.string().url().default('postgresql://postgres:postgres@localhost:5432/veriq?schema=public'),
-  COMPANY_PROVIDER: z.literal('mock').default('mock'),
+  COMPANY_PROVIDER: z.enum(['mock', 'ur_open_data']).default('mock'),
   TELEGRAM_BOT_TOKEN: z.string().optional().default(''),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional().default(''),
   TELEGRAM_WEBHOOK_URL: z.string().url().optional().or(z.literal('')).default(''),

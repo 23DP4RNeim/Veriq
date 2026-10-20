@@ -6,7 +6,7 @@ const app = await buildApp({ config });
 
 try {
   await app.listen({ port: config.PORT, host: config.HOST });
-  app.log.info({ port: config.PORT, provider: 'mock' }, 'Veriq API listening');
+  app.log.info({ port: config.PORT, provider: config.COMPANY_PROVIDER }, 'Veriq API listening');
 } catch (error) {
   app.log.error({ errorName: error instanceof Error ? error.name : 'unknown' }, 'API failed to start');
   await app.close();

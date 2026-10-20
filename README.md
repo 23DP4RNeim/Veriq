@@ -2,7 +2,7 @@
 
 **Business Verification & Intelligence**
 
-Veriq is a modular TypeScript MVP for company lookup and transparent business verification. The first release uses fictional Latvian test companies through a mock provider. It is not a legally authoritative determination and does not integrate UR, Firmas.lv, VID, sanctions, or financial APIs.
+Veriq is a modular TypeScript app for Latvian company lookup and transparent business verification. It can use fictional fixtures or daily open datasets published by the Latvian Register of Enterprises (UR). Results are decision support, not a legally authoritative determination, credit rating, sanctions clearance, or cybersecurity scan.
 
 ## Architecture
 
@@ -24,7 +24,8 @@ The Telegram adapter formats messages and handles user interaction only. The Wha
 
 ## Features
 
-- Search by Latvian registration number (`40103999999`, `LV40103999999`, or spaced digits) and normalized company name.
+- Search by Latvian registration number and normalized company name.
+- Optional local mirror of daily UR open data (CC0): commercial-register entities, current and previous names, legal form, registration and termination dates, legal address, and latest annual financial fields when published.
 - Structured checks for registration, name, status, legal form, VAT, insolvency, sanctions, and financial-data availability.
 - Explicit `VERIFIED`, `WARNING`, `NOT_VERIFIED`, `NOT_FOUND`, and `DATA_UNAVAILABLE` states; no arbitrary trust score.
 - Multiple company-name matches with Telegram selection buttons.
@@ -65,7 +66,7 @@ Open the admin console at `http://localhost:3000/admin`. In development, admin d
 | `PORT` | HTTP port | `3000` |
 | `HOST` | Bind address | `0.0.0.0` |
 | `DATABASE_URL` | PostgreSQL connection string | local Veriq database |
-| `COMPANY_PROVIDER` | Active company provider | `mock` |
+| `COMPANY_PROVIDER` | Active company provider (`mock` or `ur_open_data`) | `mock` |
 | `TELEGRAM_BOT_TOKEN` | Token from Telegram BotFather | empty, bot disabled |
 | `TELEGRAM_WEBHOOK_SECRET` | Telegram webhook secret header value | empty |
 | `TELEGRAM_WEBHOOK_URL` | Public HTTPS webhook URL ending in `/api/v1/telegram/webhook` | empty |
@@ -82,7 +83,7 @@ Do not commit `.env`. Real provider keys are intentionally not required.
 
 ## Database and mock data
 
-PostgreSQL runs from `docker-compose.yml`. Prisma schema: `prisma/schema.prisma`. Seed fixtures: `src/modules/providers/mock/companies.data.ts`; `npm run db:seed` safely upserts 16 fictional companies and can be repeated.
+PostgreSQL runs from `docker-compose.yml`. Prisma schema: `prisma/schema.prisma`. Seed fixtures: `src/modules/providers/mock/companies.data.ts`; `npm run db:seed` safely upserts 16 fictional companies and can be repeated. To add real open records, follow “UR open data” below; mock records are retained but are not returned when `COMPANY_PROVIDER=ur_open_data`.
 
 Data includes active/clean companies, warning and incomplete records, a liquidated company, insolvency and potential-sanctions examples, historical names, and duplicate possible name matches. Fictional test names do not represent actual people. Company model fields are nullable where sources may omit information.
 
@@ -109,6 +110,21 @@ Other routes include `GET /api/v1/companies/:id`, company and user history, `POS
 5. In Telegram, open the bot and send `/start`, then `/assess 40103999999`, `/check`, `/history`, or `/help`. Direct text such as `40103999999` also runs a lookup. `/assess` is an alias for `/check`: it gives a plain-language due-diligence summary from the same verification checks, not a business ranking, credit rating, or cybersecurity scan.
 
 For webhook mode, deploy behind public HTTPS, set `TELEGRAM_WEBHOOK_URL` to the public endpoint including `/api/v1/telegram/webhook`, set a long random `TELEGRAM_WEBHOOK_SECRET`, and run `npm run bot:webhook`. That process registers the webhook and runs the API. Polling and webhook modes should not run for the same bot at the same time. Local polling is the simplest development path.
+
+## UR open data
+
+The app can mirror UR’s official daily open datasets from the Latvian Open Data Portal. They are marked CC0-1.0 and do not need an API key. This is the public bulk-data download/API offered by the catalog; it is separate from UR’s authenticated VISS/API Manager services, which require an application and access approval.
+
+```sh
+npm run db:migrate:deploy
+npm run data:sync:ur
+```
+
+The initial sync downloads the full register, historical-name, registered-activity, paid-up-capital, annual-statement, income-statement, balance-sheet, and sanctions-risk files. It can take several minutes and hundreds of megabytes of network traffic. It upserts Latvian Commercial Register entries with 11-digit registration numbers, then joins the latest financial filing by registration number. Fields are left unknown when the source does not publish them. The sanctions-risk file is used only to flag a company that appears as the listed legal entity itself; a company merely linked to a listed person is not labeled sanctioned.
+
+After sync, set `COMPANY_PROVIDER=ur_open_data` in `.env` and restart the API and Telegram bot. Run `npm run data:sync:ur` again to refresh the mirror; the source files are updated daily, but Veriq does not schedule this command automatically. Check `sourceLastUpdated` and `financialYear` on each record. NACE industry codes, VAT data, board members, and ownership are not filled from these source files. The statistics portal publishes free official aggregate tables, not firm-level accounts, so those statistics are not assigned to individual companies.
+
+The direct UR system-to-system services are a separate integration: UR publishes service docs, but consumers must apply for permission and be provisioned through the VISS/API Manager process. See [UR service list](https://www.ur.gov.lv/lv/registra-api-timekla-pakalpju-servisu-saraksts), [UR free-access information](https://www.ur.gov.lv/lv/informacija-e-pakalpojuma-infourgovlv), and the [open data catalogue](https://data.gov.lv/dati/dataset/uz).
 
 ## WhatsApp setup
 
@@ -148,20 +164,20 @@ The MVP stores internal user IDs and Telegram identifiers to associate history, 
 
 ## Future real API integrations
 
-Implement UR and Firmas.lv provider classes at `src/modules/providers/ur/ur-company-data.provider.ts` and `src/modules/providers/firmas/firmas-company-data.provider.ts`. See [docs/providers.md](docs/providers.md). Obtain official/commercial access first; no URLs, credentials, or scraping behaviors have been invented. Add new provider composition behind the interface without changing channel logic or the verification engine.
+The UR public open-data mirror is implemented at `src/modules/providers/ur/`; see [docs/providers.md](docs/providers.md). Additional UR authenticated APIs and Firmas.lv require approved or commercial access. Add new provider composition behind the interface without changing channel logic or the verification engine.
 
 ## Roadmap
 
 - **Phase 1:** mock provider, Telegram, PostgreSQL, verification engine, history, REST API.
-- **Phase 2:** real company-data providers, UR/Firmas.lv access, multi-source conflict handling.
+- **Phase 2:** UR open-data mirror, authenticated UR/Firmas.lv access, multi-source conflict handling.
 - **Phase 3:** official WhatsApp Business integration, expanded dashboard, customer authentication, API keys.
 - **Phase 4:** usage limits, billing, team accounts, expanded audit and enterprise reporting.
 
 ## Known MVP limitations
 
-- Mock data only; it does not prove a company exists or that any warning is complete.
+- UR open data provides registration and published annual-report facts, but it does not cover every verification field or prove that a company is a safe counterparty.
 - Customer API authentication, API-key management, and per-user authorization are not implemented; admin access control applies only to the dashboard endpoints.
 - WhatsApp is only an interface stub.
-- Telegram selection and report buttons use the bot's in-memory fixture provider; app restarts retain database history but provider state remains fixture-backed.
+- The default provider remains mock until `COMPANY_PROVIDER=ur_open_data` is selected. The UR mirror is only as fresh as the last manual sync.
 - Metrics are structured logs and persisted provider request rows; there is no Prometheus/OpenTelemetry stack.
 - No automatic retention or GDPR export/deletion workflow exists.

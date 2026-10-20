@@ -106,6 +106,13 @@ export const adminRoutes: FastifyPluginAsync<AdminRouteDependencies> = async (ap
     liquidationDate: company.liquidationDate?.toISOString().slice(0, 10) ?? null,
     lastAnnualReportDate: company.lastAnnualReportDate?.toISOString().slice(0, 10) ?? null,
     sourceLastUpdated: company.sourceLastUpdated?.toISOString() ?? null,
+    totalAssets: company.totalAssets ?? null,
+    equity: company.equity ?? null,
+    totalLiabilities: company.totalLiabilities ?? null,
+    financialYear: company.financialYear ?? null,
+    financialCurrency: company.financialCurrency ?? null,
+    paidUpCapital: company.paidUpCapital ?? null,
+    capitalCurrency: company.capitalCurrency ?? null,
   });
   const localQuery = (query: PageQuery) => query.q?.trim().toLocaleLowerCase('lv-LV') ?? '';
   const filteredLocalCompanies = (query: PageQuery) => {
@@ -471,7 +478,7 @@ export const adminRoutes: FastifyPluginAsync<AdminRouteDependencies> = async (ap
   });
 
   app.get('/settings', async (request) => ({
-    provider: 'mock',
+    provider: config.COMPANY_PROVIDER,
     telegram: config.TELEGRAM_BOT_TOKEN ? 'configured' : 'not_configured',
     whatsapp: config.WHATSAPP_ENABLED ? 'enabled' : 'disabled',
     rateLimitRequests: config.RATE_LIMIT_REQUESTS,

@@ -19,7 +19,7 @@ const app = await buildApp({ config, prisma, services, telegram });
 try {
   await telegram.setWebhook();
   await app.listen({ port: config.PORT, host: config.HOST });
-  app.log.info({ port: config.PORT, provider: 'mock' }, 'Veriq webhook server listening');
+  app.log.info({ port: config.PORT, provider: config.COMPANY_PROVIDER }, 'Veriq webhook server listening');
 } catch (error) {
   app.log.error({ errorName: error instanceof Error ? error.name : 'unknown' }, 'Webhook server failed to start');
   process.exitCode = 1;

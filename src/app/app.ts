@@ -57,7 +57,7 @@ export async function buildApp(options: BuildAppOptions) {
   await app.register(rateLimit, { max: 120, timeWindow: '1 minute' });
   await app.register(swagger, {
     openapi: {
-      info: { title: 'Veriq API', version: '1.0.0', description: 'Company search and structured verification using mock data.' },
+      info: { title: 'Veriq API', version: '1.0.0', description: 'Company search and structured verification using configured company data.' },
       servers: [{ url: '/api/v1' }],
       tags: [
         { name: 'health', description: 'Operational checks' },

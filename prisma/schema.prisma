@@ -89,6 +89,13 @@ model Company {
   revenue                Float?
   profit                 Float?
   employeeCount          Int?              @map("employee_count")
+  totalAssets            Float?            @map("total_assets")
+  equity                 Float?
+  totalLiabilities       Float?            @map("total_liabilities")
+  financialYear          Int?              @map("financial_year")
+  financialCurrency      String?           @map("financial_currency")
+  paidUpCapital          Float?            @map("paid_up_capital")
+  capitalCurrency        String?            @map("capital_currency")
   insolvencyStatus       InsolvencyStatus  @default(UNKNOWN) @map("insolvency_status")
   sanctionsStatus        SanctionsStatus   @default(UNKNOWN) @map("sanctions_status")
   dataSource             String            @default("Mock Provider") @map("data_source")
@@ -101,6 +108,7 @@ model Company {
   auditLogs              AuditLog[]
 
   @@index([name])
+  @@index([dataSource])
   @@index([createdAt])
   @@map("companies")
 }

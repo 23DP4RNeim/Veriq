@@ -33,6 +33,13 @@ export interface CompanyRecord {
   revenue: number | null;
   profit: number | null;
   employeeCount: number | null;
+  totalAssets?: number | null;
+  equity?: number | null;
+  totalLiabilities?: number | null;
+  financialYear?: number | null;
+  financialCurrency?: string | null;
+  paidUpCapital?: number | null;
+  capitalCurrency?: string | null;
   insolvencyStatus: InsolvencyStatus;
   sanctionsStatus: SanctionsStatus;
   dataSource: string;
